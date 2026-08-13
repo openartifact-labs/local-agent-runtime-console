@@ -1,0 +1,117 @@
+{
+  "name": "@openartifact-labs/runtime-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local Agent Runtime Console desktop shell",
+  "author": "OpenArtifact Labs",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/openartifact-labs/local-agent-runtime-console",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsup src/main.ts --format cjs --platform node --target node22 --external electron --sourcemap --clean --out-dir dist",
+    "dev": "pnpm run build && electron .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test",
+    "pack": "pnpm run build && electron-builder --dir",
+    "dist": "pnpm run build && electron-builder"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  },
+  "build": {
+    "appId": "labs.openartifact.runtimeconsole",
+    "productName": "Local Agent Runtime Console",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "asar": true,
+    "npmRebuild": false,
+    "directories": {
+      "output": "../../release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../api/dist",
+        "to": "api",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../api/package.json",
+        "to": "api/package.json"
+      },
+      {
+        "from": "../web/dist",
+        "to": "web",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.developer-tools",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "Development",
+      "executableName": "local-agent-runtime-console"
+    }
+  }
+}

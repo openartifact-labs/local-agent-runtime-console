@@ -1,0 +1,30 @@
+{
+  "name": "@openartifact-labs/runtime-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test src/**/*.test.ts",
+    "db:migrate": "tsx src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@openartifact-labs/runtime-contracts": "workspace:*",
+    "@fastify/cors": "^11.1.0",
+    "@fastify/static": "^10.1.2",
+    "dotenv": "^17.2.1",
+    "fastify": "^5.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsx": "^4.20.5",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  }
+}

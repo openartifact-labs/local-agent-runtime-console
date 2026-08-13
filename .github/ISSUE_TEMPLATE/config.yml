@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞私密报告
+    url: https://github.com/openartifact-labs/local-agent-runtime-console/security/advisories/new
+    about: 请勿公开提交未修复漏洞、凭据或敏感运行数据。
+  - name: 使用文档
+    url: https://github.com/openartifact-labs/local-agent-runtime-console/blob/main/README.md
+    about: 提交问题前请先查看项目边界、开发状态和文档索引。

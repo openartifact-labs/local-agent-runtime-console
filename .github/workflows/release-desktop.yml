@@ -1,0 +1,128 @@
+name: 构建桌面版 Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "已有的发布标签，例如 v1.0.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  quality:
+    name: 发布质量门
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.16.0
+      - name: 安装 Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+      - name: 验证
+        run: pnpm typecheck && pnpm test && pnpm build
+
+  build:
+    name: 构建 ${{ matrix.name }}
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            command: pnpm --dir apps/desktop exec electron-builder --win --x64 --arm64
+          - name: macOS
+            os: macos-latest
+            command: pnpm --dir apps/desktop exec electron-builder --mac --x64 --arm64
+          - name: Linux
+            os: ubuntu-latest
+            command: pnpm --dir apps/desktop exec electron-builder --linux --x64 --arm64
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.16.0
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建共享契约
+        run: pnpm --dir packages/contracts build
+
+      - name: 构建本地 API
+        run: pnpm --dir apps/api build
+
+      - name: 构建 Web 界面
+        run: pnpm --dir apps/web build
+
+      - name: 构建桌面主进程
+        run: pnpm --dir apps/desktop build
+
+      - name: 生成安装包
+        run: ${{ matrix.command }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: 上传平台产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-agent-runtime-console-${{ matrix.name }}
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.zip
+            release/*.AppImage
+            release/*.deb
+            release/*.blockmap
+            release/*.yml
+          if-no-files-found: error
+
+  release:
+    name: 汇总 GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+    steps:
+      - name: 下载全部安装包
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: 创建草稿 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          draft: true
+          generate_release_notes: true
+          files: artifacts/*

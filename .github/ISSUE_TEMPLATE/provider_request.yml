@@ -1,0 +1,59 @@
+name: Provider 接入建议
+description: 建议支持新的 AI Agent Runtime
+title: "[Provider] "
+labels:
+  - enhancement
+  - provider
+body:
+  - type: markdown
+    attributes:
+      value: |
+        当前仅实现 CodexProvider。新增 Provider 必须有稳定、可合法使用的本机接口，并遵守凭据不托管原则。
+  - type: input
+    id: provider
+    attributes:
+      label: Provider 名称
+    validations:
+      required: true
+  - type: input
+    id: docs
+    attributes:
+      label: 官方接口文档
+      description: 请提供公开的官方文档链接，不要粘贴秘密或逆向得到的凭据。
+    validations:
+      required: true
+  - type: textarea
+    id: capabilities
+    attributes:
+      label: 可用能力
+      description: 说明任务发现、任务发起、事件流、中断、输出、Token 等能力哪些有稳定接口。
+    validations:
+      required: true
+  - type: textarea
+    id: auth
+    attributes:
+      label: 安装与认证方式
+      description: 应由用户在 Provider 官方工具中完成认证，观测台不能托管账号密码。
+    validations:
+      required: true
+  - type: textarea
+    id: local_data
+    attributes:
+      label: 本机数据来源
+      description: 说明官方 API、进程协议或本机持久化记录及其平台支持情况。
+    validations:
+      required: true
+  - type: textarea
+    id: license
+    attributes:
+      label: 许可证与使用限制
+      description: 说明 SDK、协议或数据格式是否允许开源集成和再分发。
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 隐私确认
+      options:
+        - label: 方案不要求提交账号密码、Token、Cookie 或真实运行数据。
+          required: true

@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@openartifact-labs/runtime-contracts": ["../../packages/contracts/src/index.ts"]
+    },
+    "noEmit": true
+  },
+  "include": ["src", "vite.config.ts"]
+}

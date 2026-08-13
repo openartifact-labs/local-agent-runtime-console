@@ -1,0 +1,25 @@
+{
+  "name": "local-agent-runtime-console",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openartifact-labs/local-agent-runtime-console.git"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "packageManager": "pnpm@11.16.0",
+  "scripts": {
+    "dev": "pnpm --filter @openartifact-labs/runtime-contracts build && pnpm --parallel --filter @openartifact-labs/runtime-api --filter @openartifact-labs/runtime-web dev",
+    "build": "pnpm -r build",
+    "build:desktop": "pnpm --filter @openartifact-labs/runtime-contracts build && pnpm --filter @openartifact-labs/runtime-api build && pnpm --filter @openartifact-labs/runtime-web build && pnpm --filter @openartifact-labs/runtime-desktop build",
+    "desktop:pack": "pnpm build:desktop && pnpm --filter @openartifact-labs/runtime-desktop run pack",
+    "desktop:dist": "pnpm build:desktop && pnpm --filter @openartifact-labs/runtime-desktop run dist",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:migrate": "pnpm --filter @openartifact-labs/runtime-api db:migrate",
+    "codex:probe": "node scripts/probe-codex-app-server.mjs"
+  }
+}
