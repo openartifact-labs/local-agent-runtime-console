@@ -95,6 +95,31 @@ export interface UsageAnalyticsSeries {
   points: Array<{ date: string; values: Record<string, number> }>;
 }
 
+/**
+ * 单个本机会话在中国时区当天的可观测使用增量。
+ *
+ * 跨天会话依赖前一天最后一个累计快照作为日初基线；缺失该基线时，
+ * `tokenUsagePartial` 为 true，调用方不得将其当作完整的当天用量。
+ */
+export interface ProviderUsageTodaySession {
+  taskExternalId?: string;
+  taskTitle: string;
+  model?: string;
+  firstActivityAt: string;
+  lastActivityAt: string;
+  usage?: RuntimeTokenUsage;
+  tokenUsagePartial: boolean;
+}
+
+export interface ProviderUsageTodayDetail {
+  date: string;
+  sessionCount: number;
+  tokenObservedSessionCount: number;
+  partialTokenSessionCount: number;
+  usage: RuntimeTokenUsage;
+  sessions: ProviderUsageTodaySession[];
+}
+
 export interface ProviderUsageAnalytics {
   providerId: string;
   observedAt: string;
@@ -106,6 +131,7 @@ export interface ProviderUsageAnalytics {
   bySurface: UsageAnalyticsSeries;
   byModel: UsageAnalyticsSeries;
   bySkill: UsageAnalyticsSeries;
+  today: ProviderUsageTodayDetail;
 }
 
 export interface RuntimeRun extends RuntimeTokenUsage {

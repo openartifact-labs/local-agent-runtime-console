@@ -41,21 +41,19 @@
 
 开源桌面版迁移基线已完成，并通过 Windows 目录包启动验证。首个公开 Release 前仍需完成应用图标、安装包签名、校验值、macOS/Linux 真机验证和升级策略，因此当前版本适合开发与预览验证，不建议承载唯一副本的重要数据。
 
+## Windows 源码安装与启动
+
+当前版本不提供可直接下载的安装包。已安装并登录 Codex Desktop 的 Windows 用户，可以拉取源码后在 Codex 中输入：
+
+```text
+请阅读 INSTALL.md，并按文档完成安装和启动。
+```
+
+完整的环境检查、系统级操作确认边界、桌面构建、启动、快捷方式和更新流程见 [INSTALL.md](INSTALL.md)。项目内会构建 `release\win-unpacked\Local Agent Runtime Console.exe`；不会自动安装系统软件、修改系统环境或设置开机自启。
+
 ## 本地开发
 
-前置条件：
-
-- Node.js 22.13+
-- pnpm 11+
-- 已安装并自行登录的 Codex CLI
-
-```bash
-pnpm install
-pnpm typecheck
-pnpm test
-pnpm build
-pnpm desktop:pack
-```
+开发者模式的前置条件和命令见 [本地开发与运行](docs/部署与运维.md)。标准开发入口为：
 
 迁移完成后的标准开发入口将统一为：
 
@@ -67,6 +65,7 @@ pnpm desktop:pack
 
 ## 文档
 
+- [Windows 源码安装与启动](INSTALL.md)
 - [项目概览](docs/项目概览.md)
 - [功能目录](docs/功能目录.md)
 - [系统架构](docs/架构.md)

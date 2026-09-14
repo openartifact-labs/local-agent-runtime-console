@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 import { formatDateTime, formatNumber } from "../lib/format";
-import { UsageAnalyticsPanel } from "./UsageAnalyticsPanel";
+import { TodaySessionDetails, UsageAnalyticsPanel } from "./UsageAnalyticsPanel";
 
 interface ProviderUsageDialogProps {
   usage: ProviderUsageSnapshot;
@@ -52,7 +52,7 @@ export function ProviderUsageDialog({
   onClose,
 }: ProviderUsageDialogProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const [activeTab, setActiveTab] = useState<"summary" | "analytics">("summary");
+  const [activeTab, setActiveTab] = useState<"summary" | "today" | "analytics">("today");
   const rateLimit = usage.rateLimit;
   const usedPercent = Math.min(100, Math.max(0, rateLimit?.usedPercent ?? 0));
   const remainingPercent = rateLimit?.usedPercent === undefined ? undefined : 100 - usedPercent;
@@ -98,7 +98,7 @@ export function ProviderUsageDialog({
             <span><Gauge size={19} /></span>
             <div>
               <h2 id="usage-dialog-title">Codex Token 用量</h2>
-              <p>当前登录账号额度与最近活跃会话的本机观测数据</p>
+              <p>当前登录账号额度与本机会话的观测数据</p>
             </div>
           </div>
           <div className="usage-dialog-actions">
@@ -114,6 +114,7 @@ export function ProviderUsageDialog({
         </header>
 
         <div className="usage-dialog-tabs" role="tablist" aria-label="Codex 用量视图">
+          <button type="button" role="tab" aria-selected={activeTab === "today"} className={activeTab === "today" ? "is-active" : undefined} onClick={() => setActiveTab("today")}>今日明细</button>
           <button type="button" role="tab" aria-selected={activeTab === "summary"} className={activeTab === "summary" ? "is-active" : undefined} onClick={() => setActiveTab("summary")}>额度与 Token</button>
           <button type="button" role="tab" aria-selected={activeTab === "analytics"} className={activeTab === "analytics" ? "is-active" : undefined} onClick={() => setActiveTab("analytics")}>使用分析</button>
         </div>
@@ -144,7 +145,7 @@ export function ProviderUsageDialog({
 
         <div className="usage-section-heading">
           <div>
-            <h3>最近活跃会话累计</h3>
+            <h3>最近活跃会话累计（可跨天）</h3>
             <p title={usage.taskExternalId}>{usage.taskTitle ?? "未命名 Codex 会话"}</p>
           </div>
           <span>观测于 {formatDateTime(usage.observedAt)}</span>
@@ -162,9 +163,13 @@ export function ProviderUsageDialog({
         <footer className="usage-dialog-footer">
           <span>缓存命中率 {percent(cacheHitRate)}</span>
           {usage.modelContextWindow !== undefined && <span>上下文窗口 {formatNumber(usage.modelContextWindow)}</span>}
-          <p>输入 Token 已包含缓存输入，输出 Token 已包含推理 Token；总量不会重复相加。剩余额度来自 Codex 当前登录账号的限额周期，Token 明细来自本机会话记录；两者都不代表账单金额或精确 Token 余额。</p>
+          <p>输入 Token 已包含缓存输入，输出 Token 已包含推理 Token；总量不会重复相加。剩余额度来自 Codex 当前登录账号的限额周期；这里的会话累计与使用分析均来自本机记录，不代表其他设备、网页端或账单金额。</p>
         </footer>
-        </> : (
+        </> : activeTab === "today" ? (
+          analyticsLoading && !analytics
+            ? <div className="usage-analytics-loading">正在聚合本机会话记录...</div>
+            : analytics && <TodaySessionDetails analytics={analytics} />
+        ) : (
           <UsageAnalyticsPanel
             analytics={analytics}
             loading={analyticsLoading}

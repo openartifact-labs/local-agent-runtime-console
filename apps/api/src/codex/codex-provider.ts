@@ -70,6 +70,7 @@ export function mapCodexThread(
 export class CodexProvider implements AgentRuntimeProvider {
   private readonly listeners = new Set<(event: ProviderEvent) => void>();
   private readonly threadPaths = new Map<string, string>();
+  private readonly observedTasks = new Map<string, RuntimeTask>();
   private recentUsageTasks: RuntimeTask[] = [];
   private latestUsage?: ProviderUsageSnapshot;
   private readonly unsubscribe: () => void;
@@ -116,6 +117,7 @@ export class CodexProvider implements AgentRuntimeProvider {
       if (response.thread.path) this.threadPaths.set(response.thread.id, response.thread.path);
       const observation = response.thread.path ? await this.rolloutObserver.inspect(response.thread.path) : undefined;
       const task = mapCodexThread(response.thread, "discovered", observation, this.options.staleAfterMs);
+      this.observedTasks.set(task.externalId, task);
       if (observation) this.captureUsage(task, observation);
       return task;
     } catch { return null; }
@@ -221,12 +223,16 @@ export class CodexProvider implements AgentRuntimeProvider {
     } : null;
   }
   async getUsageAnalytics(days = 30): Promise<ProviderUsageAnalytics> {
-    return this.usageAnalyzer.analyze(this.threadPaths.values(), days);
+    return this.usageAnalyzer.analyze(
+      [...this.threadPaths.entries()].map(([externalId, path]) => ({ path, task: this.observedTasks.get(externalId) })),
+      days,
+    );
   }
   async close(): Promise<void> { this.unsubscribe(); await this.client.close(); }
 
   private async mapObservedThreads(threads: CodexThread[]): Promise<RuntimeTask[]> {
     this.threadPaths.clear();
+    this.observedTasks.clear();
     const results = new Array<RuntimeTask>(threads.length);
     let cursor = 0;
     const worker = async (): Promise<void> => {
@@ -236,6 +242,7 @@ export class CodexProvider implements AgentRuntimeProvider {
         if (thread.path) this.threadPaths.set(thread.id, thread.path);
         const observation = thread.path ? await this.rolloutObserver.inspect(thread.path) : undefined;
         const task = mapCodexThread(thread, "discovered", observation, this.options.staleAfterMs);
+        this.observedTasks.set(task.externalId, task);
         if (observation) this.captureUsage(task, observation);
         results[index] = task;
       }

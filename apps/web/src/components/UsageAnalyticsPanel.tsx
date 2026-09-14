@@ -1,4 +1,4 @@
-import type { ProviderUsageAnalytics, UsageAnalyticsSeries } from "@openartifact-labs/runtime-contracts";
+import type { ProviderUsageAnalytics, ProviderUsageTodaySession, UsageAnalyticsSeries } from "@openartifact-labs/runtime-contracts";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { formatDateTime, formatNumber } from "../lib/format";
@@ -39,6 +39,65 @@ function ChartLegend({ series }: { series: UsageAnalyticsSeries }) {
 
 function EmptyChart() {
   return <div className="usage-chart-empty">当前时间范围内暂无可识别数据</div>;
+}
+
+function tokenValue(session: ProviderUsageTodaySession, field: keyof NonNullable<ProviderUsageTodaySession["usage"]>): string {
+  return formatNumber(session.usage?.[field]);
+}
+
+export function TodaySessionDetails({ analytics }: { analytics: ProviderUsageAnalytics }) {
+  const { today } = analytics;
+  return (
+    <section className="usage-chart-section usage-today-details">
+      <header>
+        <div>
+          <h3>今日会话 Token 明细</h3>
+          <p>{shortDate(today.date)}，按中国时区汇总；跨天会话按累计快照差值计算</p>
+        </div>
+        <strong>{formatNumber(today.usage.totalTokens)}<small>可观测 Token</small></strong>
+      </header>
+      <div className="usage-today-summary">
+        <span>{formatNumber(today.sessionCount)} 个会话</span>
+        <span>{formatNumber(today.tokenObservedSessionCount)} 个含 Token 快照</span>
+        {today.partialTokenSessionCount > 0 && <span className="usage-today-warning">{formatNumber(today.partialTokenSessionCount)} 个部分可观测</span>}
+      </div>
+      {today.sessions.length === 0 ? <div className="usage-chart-empty usage-today-empty">今天尚未发现本机 Codex 会话活动</div> : (
+        <div className="usage-today-table-scroll">
+          <table className="usage-today-table">
+            <thead>
+              <tr>
+                <th>任务</th>
+                <th>最后模型</th>
+                <th>最后活动</th>
+                <th>输入</th>
+                <th>缓存</th>
+                <th>输出</th>
+                <th>推理</th>
+                <th>总 Token</th>
+              </tr>
+            </thead>
+            <tbody>
+              {today.sessions.map((session) => (
+                <tr key={session.taskExternalId ?? `${session.taskTitle}-${session.lastActivityAt}`}>
+                  <td className="usage-today-task" title={session.taskTitle}>
+                    <strong>{session.taskTitle}</strong>
+                    {session.tokenUsagePartial && <span title="会话早于今天开始，但缺少今天开始前的累计快照；展示值可能包含更早用量">部分可观测</span>}
+                  </td>
+                  <td title={session.model}>{session.model ?? "未识别"}</td>
+                  <td>{formatDateTime(session.lastActivityAt)}</td>
+                  <td>{tokenValue(session, "inputTokens")}</td>
+                  <td>{tokenValue(session, "cachedInputTokens")}</td>
+                  <td>{tokenValue(session, "outputTokens")}</td>
+                  <td>{tokenValue(session, "reasoningOutputTokens")}</td>
+                  <td className="usage-today-total">{tokenValue(session, "totalTokens")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
 }
 
 function SurfaceBars({ series }: { series: UsageAnalyticsSeries }) {
@@ -216,10 +275,13 @@ export function UsageAnalyticsPanel({ analytics, loading, days, onDaysChange }: 
           <strong>本机使用分析</strong>
           <span>{analytics ? `观测于 ${formatDateTime(analytics.observedAt)}` : "正在读取本机会话记录"}</span>
         </div>
-        <div className="usage-range-control" aria-label="统计时间范围">
-          {[7, 30, 90].map((value) => (
-            <button key={value} type="button" className={days === value ? "is-active" : undefined} onClick={() => onDaysChange(value)}>{value} 天</button>
-          ))}
+        <div className="usage-analytics-toolbar-actions">
+          {analytics && <span className="usage-today-session-count">今日累计 <strong>{formatNumber(analytics.today.sessionCount)}</strong> 个会话</span>}
+          <div className="usage-range-control" aria-label="统计时间范围">
+            {[1, 7, 30, 90].map((value) => (
+              <button key={value} type="button" className={days === value ? "is-active" : undefined} onClick={() => onDaysChange(value)}>{value === 1 ? "当天" : `${value} 天`}</button>
+            ))}
+          </div>
         </div>
       </div>
 
